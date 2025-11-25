@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import TypingQuote from './TypingQuote';
+import TypingQuote from './TypingQuotue';
 import { QuotePair } from '../types';
 
 interface ContentScreenProps {

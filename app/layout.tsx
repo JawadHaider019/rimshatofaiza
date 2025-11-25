@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cinematic Birthday",
-  description: "A minimalist, editorial-style birthday greeting experience.",
+  title: "Rimsha To Faiza",
 };
 
 export default function RootLayout({
