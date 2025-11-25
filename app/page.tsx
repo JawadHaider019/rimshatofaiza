@@ -73,7 +73,7 @@ export default function Home() {
   const handleStart = async () => {
     console.log('Start clicked, moving to content view');
     setIsTransitioning(true);
-    await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+    await new Promise(resolve => setTimeout(resolve, 800));
     setView('content');
     setCurrentPageIndex(0);
     setIsTransitioning(false);
@@ -84,7 +84,7 @@ export default function Home() {
     
     if (data && currentPageIndex < data.pages.length - 1) {
       setIsTransitioning(true);
-      await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+      await new Promise(resolve => setTimeout(resolve, 800));
       const nextIndex = currentPageIndex + 1;
       console.log('Moving to next page:', nextIndex);
       setCurrentPageIndex(nextIndex);
@@ -92,7 +92,7 @@ export default function Home() {
     } else {
       console.log('All pages completed, moving to end screen');
       setIsTransitioning(true);
-      await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+      await new Promise(resolve => setTimeout(resolve, 800));
       setView('end');
       setIsTransitioning(false);
     }
@@ -101,7 +101,7 @@ export default function Home() {
   const handleReplay = async () => {
     console.log('Replay clicked, resetting to start');
     setIsTransitioning(true);
-    await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+    await new Promise(resolve => setTimeout(resolve, 800));
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
     }
@@ -121,23 +121,24 @@ export default function Home() {
     });
   }, [view, currentPageIndex, data, isLoading, isTransitioning]);
 
-  // Logic to determine which background to show
-  let activeImageIndex = 0;
+  // Get current background image source
+  const getCurrentBgSrc = () => {
+    let activeImageIndex = 0;
 
-  if (view === 'start') {
-    activeImageIndex = 0;
-  } else if (view === 'content') {
-    activeImageIndex = currentPageIndex + 1;
-  } else if (view === 'end') {
-    activeImageIndex = 10;
-  }
+    if (view === 'start') {
+      activeImageIndex = 0;
+    } else if (view === 'content') {
+      activeImageIndex = currentPageIndex + 1;
+    } else if (view === 'end') {
+      activeImageIndex = 10;
+    }
 
-  // Ensure activeImageIndex doesn't exceed available images
-  activeImageIndex = Math.min(activeImageIndex, DEFAULT_IMAGES.length - 1);
+    activeImageIndex = Math.min(activeImageIndex, DEFAULT_IMAGES.length - 1);
+    return customImages[activeImageIndex] || DEFAULT_IMAGES[activeImageIndex];
+  };
 
-  // Get the source for images
-  const currentBgSrc = customImages[activeImageIndex] || DEFAULT_IMAGES[activeImageIndex];
-  const hasError = imgErrors[activeImageIndex] && !customImages[activeImageIndex];
+  const currentBgSrc = getCurrentBgSrc();
+  const hasError = imgErrors[0] && !customImages[0];
 
   // Handle manual file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,11 +147,11 @@ export default function Home() {
       const objectUrl = URL.createObjectURL(file);
       setCustomImages(prev => ({
         ...prev,
-        [activeImageIndex]: objectUrl
+        [0]: objectUrl
       }));
       setImgErrors(prev => ({
         ...prev,
-        [activeImageIndex]: false
+        [0]: false
       }));
     }
   };
@@ -183,27 +184,49 @@ export default function Home() {
         className="hidden" 
       />
 
-      {/* Background Layer */}
+      {/* Background Layer - Fixed position without space */}
       <div className="absolute inset-0 z-0">
-        {/* Image background for all screens */}
-        <div className="absolute inset-0 bg-[#1a1a1a]">
-          {!hasError && (
-            <img 
-              key={currentBgSrc}
-              src={currentBgSrc}
-              alt={`Background for ${view} view`}
-              className={`w-full h-full object-cover transition-all duration-1000 ease-in-out opacity-60 ${
-                isTransitioning ? 'scale-110 blur-sm' : 'scale-100 blur-0'
-              }`}
-              onError={() => {
-                console.error(`Failed to load image: ${currentBgSrc}`);
-                setImgErrors(prev => ({ ...prev, [activeImageIndex]: true }));
-              }}
-            />
-          ) }
-          {/* Dark overlay for text readability */}
-          <div className="absolute " />
-        </div>
+        {view !== 'end' ? (
+          <div className="absolute inset-0">
+            {!hasError ? (
+              <img 
+                key={currentBgSrc}
+                src={currentBgSrc}
+                alt="Background"
+                className={`w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                  isTransitioning ? 'scale-110 blur-sm' : 'scale-100 blur-0'
+                }`}
+                style={{ objectFit: 'cover' }}
+                onError={() => {
+                  console.error(`Failed to load image: ${currentBgSrc}`);
+                  setImgErrors(prev => ({ ...prev, [0]: true }));
+                }}
+              />
+            ) : (
+              <div 
+                className="w-full h-full flex flex-col items-center justify-center text-white/60 bg-gray-900 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={triggerFileSelect}
+                title="Click to load image"
+              >
+                <div className="border-2 border-dashed border-white/30 p-8 rounded-xl flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="font-cinematic text-xl mb-2 text-yellow-400">Image Not Found</p>
+                  <p className="font-mono text-sm bg-black/0 px-2 py-1 rounded mb-4">Missing: {currentBgSrc}</p>
+                  <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full text-sm font-bold transition">
+                    Tap to Select Photo
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* Dark overlay for text readability */}
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
+        ) : (
+          // Black background for end screen (images handled in EndScreen)
+          <div className="absolute inset-0 bg-black" />
+        )}
       </div>
 
       {/* Transition Overlay */}
@@ -229,7 +252,9 @@ export default function Home() {
         {view === 'end' && data && (
           <EndScreen 
             quotePairs={data.pages} 
-            onReplay={handleReplay} 
+            onReplay={handleReplay}
+            images={DEFAULT_IMAGES.slice(1)} // Pass all content images (1-10)
+            customImages={customImages}
           />
         )}
       </div>
@@ -240,6 +265,11 @@ export default function Home() {
         Your browser does not support the audio element.
       </audio>
 
+      {/* Debug Info (remove in production) */}
+      <div className="absolute bottom-4 left-4 z-20 bg-black/70 text-white p-2 rounded text-xs font-mono">
+        View: {view} | Page: {currentPageIndex + 1}/{data?.pages.length} | 
+        Transition: {isTransitioning ? 'Yes' : 'No'}
+      </div>
     </div>
   );
 }

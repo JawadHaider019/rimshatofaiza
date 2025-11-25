@@ -103,8 +103,8 @@ const TypingQuote: React.FC<TypingQuoteProps> = ({ text, position, delayStart = 
   // Responsive positioning and width constraints
   // Increased max-width to prevent unnecessary wrapping
   const containerClasses = position === 'top-right'
-    ? 'top-10 right-0 pr-4 sm:pr-8 sm:top-10 sm:right-0 md:top-12 lg:top-16 items-end'
-    : 'bottom-10 left-0 pl-4 sm:pl-8 sm:bottom-10 sm:left-0 md:bottom-12 lg:bottom-16 items-start';
+    ? 'top-10 right-0 pr-4   '
+    : 'bottom-10 left-0 pl-4 ';
 
   // Wider containers to accommodate longer lines
   const widthClasses = 'w-full max-w-full sm:max-w-[90%] md:max-w-[80%] lg:max-w-[60%]';

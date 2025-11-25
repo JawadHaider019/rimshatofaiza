@@ -1,14 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { QuotePair } from '../types';
 
 interface EndScreenProps {
   quotePairs: QuotePair[];
   onReplay: () => void;
+  images: string[];
+  customImages: Record<number, string>;
 }
 
-const EndScreen: React.FC<EndScreenProps> = ({ quotePairs, onReplay }) => {
+const EndScreen: React.FC<EndScreenProps> = ({ quotePairs, onReplay, images, customImages }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
   // Flatten all quotes into a single list
   const allQuotes = quotePairs.flatMap(pair => [pair.quote1, pair.quote2]);
 
@@ -22,15 +27,44 @@ const EndScreen: React.FC<EndScreenProps> = ({ quotePairs, onReplay }) => {
     "بھلا کے ساری دنیا کو تمہیں میں من کی چاہ لکھتی ؟"
   ];
 
+  useEffect(() => {
+    // Image slideshow interval
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        setFade(true);
+      }, 500);
+    }, 4000); // Change image every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  // Get current image source (custom or default)
+  const getCurrentImageSrc = () => {
+    const imageIndex = currentImageIndex + 1; // +1 because images array starts from index 1
+    return customImages[imageIndex] || images[currentImageIndex];
+  };
+
   return (
     <div className="absolute inset-0 z-30 flex items-end justify-center overflow-hidden">
+      
+      {/* Background Image Slideshow */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={getCurrentImageSrc()}
+          alt={`Memory ${currentImageIndex + 1}`}
+          className={`w-full h-full object-cover transition-opacity duration-500 ${fade ? 'opacity-40' : 'opacity-0'}`}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
         
-      {/* Moving Credits Container */}
-      <div className="w-full max-w-2xl px-6 text-center animate-credits pb-32">
+      {/* Moving Credits Container - EXACT SAME ANIMATION */}
+      <div className="w-full max-w-2xl px-6 text-center animate-credits pb-32 relative z-10">
         
         <div className="mb-24 space-y-4">
             <h1 className="font-urdu text-4xl sm:text-6xl text-white mb-2">سالگرہ مبارک</h1>
-           
         </div>
 
         <div className="space-y-24">
@@ -64,11 +98,9 @@ const EndScreen: React.FC<EndScreenProps> = ({ quotePairs, onReplay }) => {
                  </p>
             </div>
         </div>
-
-
       </div>
 
-      <style>{`
+      <style jsx>{`
         @keyframes credits {
           0% { transform: translateY(100%); }
           100% { transform: translateY(-20%); }
