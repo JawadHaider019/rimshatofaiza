@@ -165,8 +165,8 @@ export default function Home() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="relative w-full h-screen overflow-hidden bg-black flex items-center justify-center">
-        <div className="text-white text-xl font-cinematic animate-pulse">
+      <div className="relative w-full h-screen overflow-hidden bg-black flex items-center justify-center p-4">
+        <div className="text-white text-lg sm:text-xl md:text-2xl font-cinematic animate-pulse text-center px-4">
           Loading your special birthday message...
         </div>
       </div>
@@ -204,24 +204,24 @@ export default function Home() {
               />
             ) : (
               <div 
-                className="w-full h-full flex flex-col items-center justify-center text-white/60 bg-gray-900 cursor-pointer hover:bg-gray-800 transition-colors"
+                className="w-full h-full flex flex-col items-center justify-center text-white/60 bg-gray-900 cursor-pointer hover:bg-gray-800 transition-colors p-4"
                 onClick={triggerFileSelect}
                 title="Click to load image"
               >
-                <div className="border-2 border-dashed border-white/30 p-8 rounded-xl flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="border-2 border-dashed border-white/30 p-4 sm:p-6 md:p-8 rounded-xl flex flex-col items-center max-w-md w-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mb-3 sm:mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="font-cinematic text-xl mb-2 text-yellow-400">Image Not Found</p>
-                  <p className="font-mono text-sm bg-black/0 px-2 py-1 rounded mb-4">Missing: {currentBgSrc}</p>
-                  <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full text-sm font-bold transition">
+                  <p className="font-cinematic text-base sm:text-lg md:text-xl mb-2 text-yellow-400 text-center">Image Not Found</p>
+                  <p className="font-mono text-xs sm:text-sm bg-black/0 px-2 py-1 rounded mb-3 sm:mb-4 text-center break-all">Missing: {currentBgSrc}</p>
+                  <button className="bg-white/10 hover:bg-white/20 text-white px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition w-full max-w-xs">
                     Tap to Select Photo
                   </button>
                 </div>
               </div>
             )}
             {/* Dark overlay for text readability */}
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black/10" />
           </div>
         ) : (
           // Black background for end screen (images handled in EndScreen)
@@ -234,8 +234,8 @@ export default function Home() {
         <div className="absolute inset-0 z-20 bg-black/30 transition-opacity duration-800 ease-in-out" />
       )}
 
-      {/* Main Content Area */}
-      <div className="relative z-10 w-full h-full">
+      {/* Main Content Area with Safe Padding */}
+      <div className="relative z-10 w-full h-full safe-area-padding">
         {view === 'start' && (
           <StartScreen onStart={handleStart} />
         )}
@@ -265,11 +265,34 @@ export default function Home() {
         Your browser does not support the audio element.
       </audio>
 
-      {/* Debug Info (remove in production) */}
-      <div className="absolute bottom-4 left-4 z-20 bg-black/70 text-white p-2 rounded text-xs font-mono">
-        View: {view} | Page: {currentPageIndex + 1}/{data?.pages.length} | 
-        Transition: {isTransitioning ? 'Yes' : 'No'}
-      </div>
+  
+
+      <style jsx>{`
+        .safe-area-padding {
+          padding-left: env(safe-area-inset-left, 1rem);
+          padding-right: env(safe-area-inset-right, 1rem);
+          padding-top: env(safe-area-inset-top, 1rem);
+          padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+        
+        @media (max-width: 640px) {
+          .safe-area-padding {
+            padding-left: env(safe-area-inset-left, 0.5rem);
+            padding-right: env(safe-area-inset-right, 0.5rem);
+            padding-top: env(safe-area-inset-top, 0.5rem);
+            padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          .safe-area-padding {
+            padding-left: env(safe-area-inset-left, 2rem);
+            padding-right: env(safe-area-inset-right, 2rem);
+            padding-top: env(safe-area-inset-top, 2rem);
+            padding-bottom: env(safe-area-inset-bottom, 2rem);
+          }
+        }
+      `}</style>
     </div>
   );
 }
