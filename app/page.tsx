@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -8,10 +7,8 @@ import ContentScreen from '../components/ContentScreen';
 import EndScreen from '../components/EndScreen';
 import { BirthdayData } from '../types';
 
-// Default Paths (Expects files in public/ folder)
-// Note: In Next.js, files in 'public' are accessed from the root with a leading slash.
 const DEFAULT_IMAGES = [
-   "/start.jpeg",
+  "/start.jpeg",
   "/1.jpeg",
   "/2.jpeg",
   "/3.jpeg",
@@ -23,65 +20,122 @@ const DEFAULT_IMAGES = [
   "/9.jpeg",
   "/10.jpeg"
 ];
+
 export default function Home() {
   const [view, setView] = useState<'start' | 'content' | 'end'>('start');
   const [data, setData] = useState<BirthdayData | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
-  // Custom user-uploaded images (mapped by index 0-9)
   const [customImages, setCustomImages] = useState<Record<number, string>>({});
-  // Track errors to show fallback UI
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Preload data
+  // Preload data with loading state
   useEffect(() => {
-    generateCinematicQuotes().then(setData);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const quotesData = await generateCinematicQuotes();
+        setData(quotesData);
+        console.log('Data loaded successfully:', quotesData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        // Set fallback data if API fails
+        setData({
+          pages: [
+            { quote1: "سالگرہ مبارک", quote2: "فائزہ جانِ من" },
+            { quote1: "تمہاری دوستی میرے لئے انمول ہے", quote2: "ہمیشہ خوش رہو" }
+          ]
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  // Audio control for End Screen
+  // Audio control
   useEffect(() => {
     if (view === 'end' && audioRef.current) {
       audioRef.current.volume = 0.5;
       audioRef.current.play().catch(e => console.log("Audio play failed:", e));
     } else if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
   }, [view]);
 
-  const handleStart = () => {
-    if (data) {
-      setView('content');
-    }
+  const handleStart = async () => {
+    console.log('Start clicked, moving to content view');
+    setIsTransitioning(true);
+    await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+    setView('content');
+    setCurrentPageIndex(0);
+    setIsTransitioning(false);
   };
 
-  const handleNextPage = () => {
+  const handleNextPage = async () => {
+    console.log('Next page called, current index:', currentPageIndex);
+    
     if (data && currentPageIndex < data.pages.length - 1) {
-      setCurrentPageIndex(prev => prev + 1);
+      setIsTransitioning(true);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+      const nextIndex = currentPageIndex + 1;
+      console.log('Moving to next page:', nextIndex);
+      setCurrentPageIndex(nextIndex);
+      setIsTransitioning(false);
     } else {
+      console.log('All pages completed, moving to end screen');
+      setIsTransitioning(true);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
       setView('end');
+      setIsTransitioning(false);
     }
   };
 
-  const handleReplay = () => {
+  const handleReplay = async () => {
+    console.log('Replay clicked, resetting to start');
+    setIsTransitioning(true);
+    await new Promise(resolve => setTimeout(resolve, 800)); // Wait for transition
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+    }
     setCurrentPageIndex(0);
     setView('start');
+    setIsTransitioning(false);
   };
 
-  // Logic to determine which image index we are currently viewing
+  // Debug current state
+  useEffect(() => {
+    console.log('Current State:', {
+      view,
+      currentPageIndex,
+      totalPages: data?.pages?.length || 0,
+      isLoading,
+      isTransitioning
+    });
+  }, [view, currentPageIndex, data, isLoading, isTransitioning]);
+
+  // Logic to determine which background to show
   let activeImageIndex = 0;
+
   if (view === 'start') {
-    activeImageIndex = 0; // Use p1.jpeg for start screen
+    activeImageIndex = 0;
   } else if (view === 'content') {
-    activeImageIndex = currentPageIndex;
+    activeImageIndex = currentPageIndex + 1;
   } else if (view === 'end') {
-    activeImageIndex = 9; // Use p10.jpeg for end screen
+    activeImageIndex = 10;
   }
 
-  // Get the source: either custom uploaded blob or default path
+  // Ensure activeImageIndex doesn't exceed available images
+  activeImageIndex = Math.min(activeImageIndex, DEFAULT_IMAGES.length - 1);
+
+  // Get the source for images
   const currentBgSrc = customImages[activeImageIndex] || DEFAULT_IMAGES[activeImageIndex];
   const hasError = imgErrors[activeImageIndex] && !customImages[activeImageIndex];
 
@@ -94,7 +148,6 @@ export default function Home() {
         ...prev,
         [activeImageIndex]: objectUrl
       }));
-      // Clear error for this index
       setImgErrors(prev => ({
         ...prev,
         [activeImageIndex]: false
@@ -108,6 +161,17 @@ export default function Home() {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-black flex items-center justify-center">
+        <div className="text-white text-xl font-cinematic animate-pulse">
+          Loading your special birthday message...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
       {/* Hidden File Input for Manual Override */}
@@ -119,42 +183,33 @@ export default function Home() {
         className="hidden" 
       />
 
-      {/* Background Image Layer */}
-      <div className="absolute inset-0 z-0 bg-[#1a1a1a]">
-          {!hasError ? (
+      {/* Background Layer */}
+      <div className="absolute inset-0 z-0">
+        {/* Image background for all screens */}
+        <div className="absolute inset-0 bg-[#1a1a1a]">
+          {!hasError && (
             <img 
-                key={currentBgSrc} // Key change triggers fade animation
-                src={currentBgSrc}
-                alt={`Background for page ${activeImageIndex + 1}`}
-                className="w-full h-full object-cover transition-all duration-[2000ms] ease-in-out animate-kenburns opacity-60"
-                onError={() => {
-                    console.error(`FAILED TO LOAD IMAGE: ${currentBgSrc}`);
-                    setImgErrors(prev => ({ ...prev, [activeImageIndex]: true }));
-                }}
+              key={currentBgSrc}
+              src={currentBgSrc}
+              alt={`Background for ${view} view`}
+              className={`w-full h-full object-cover transition-all duration-1000 ease-in-out opacity-60 ${
+                isTransitioning ? 'scale-110 blur-sm' : 'scale-100 blur-0'
+              }`}
+              onError={() => {
+                console.error(`Failed to load image: ${currentBgSrc}`);
+                setImgErrors(prev => ({ ...prev, [activeImageIndex]: true }));
+              }}
             />
-          ) : (
-             // Interactive Fallback if image fails
-             <div 
-                className="w-full h-full flex flex-col items-center justify-center text-white/60 bg-gray-900 cursor-pointer hover:bg-gray-800 transition-colors"
-                onClick={triggerFileSelect}
-                title="Click to load image"
-             >
-                <div className="border-2 border-dashed border-white/30 p-8 rounded-xl flex flex-col items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="font-cinematic text-xl mb-2 text-yellow-400">Image Not Found</p>
-                    <p className="font-mono text-sm bg-black/0 px-2 py-1 rounded mb-4">Missing: {DEFAULT_IMAGES[activeImageIndex]}</p>
-                    <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full text-sm font-bold transition">
-                        Tap to Select Photo
-                    </button>
-                </div>
-             </div>
-          )}
-          
-          {/* Dark Overlay for Text Readability */}
+          ) }
+          {/* Dark overlay for text readability */}
           <div className="absolute " />
+        </div>
       </div>
+
+      {/* Transition Overlay */}
+      {isTransitioning && (
+        <div className="absolute inset-0 z-20 bg-black/30 transition-opacity duration-800 ease-in-out" />
+      )}
 
       {/* Main Content Area */}
       <div className="relative z-10 w-full h-full">
@@ -162,14 +217,14 @@ export default function Home() {
           <StartScreen onStart={handleStart} />
         )}
 
-        {view === 'content' && data && data.pages[currentPageIndex] && (
+        {view === 'content' && data && data.pages.map((page, index) => (
           <ContentScreen 
-            key={currentPageIndex} 
-            data={data.pages[currentPageIndex]} 
+            key={index}
+            data={page} 
             onNext={handleNextPage}
-            isActive={view === 'content'}
+            isActive={index === currentPageIndex && !isTransitioning}
           />
-        )}
+        ))}
 
         {view === 'end' && data && (
           <EndScreen 
@@ -179,15 +234,12 @@ export default function Home() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes kenburns {
-          0% { transform: scale(1.05); }
-          100% { transform: scale(1.0); }
-        }
-        .animate-kenburns {
-          animation: kenburns 10s ease-out forwards;
-        }
-      `}} />
+      {/* Hidden Audio Element */}
+      <audio ref={audioRef} loop>
+        <source src="/background-music.mp3" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
+
     </div>
   );
 }

@@ -59,7 +59,7 @@ const EndScreen: React.FC<EndScreenProps> = ({ quotePairs, onReplay }) => {
                  <p className="font-urdu text-4xl sm:text-6xl text-yellow-400 leading-relaxed">
                    پیشکش: ریشم کی گڑیا
                  </p>
-                 <p className="font-cinematic text-white/50 text-xs tracking-widest uppercase">
+                 <p className="font-cinematic text-white/50 text-xs tracking-widest uppercase pt-10">
                     Credit: Resham ki Guria
                  </p>
             </div>

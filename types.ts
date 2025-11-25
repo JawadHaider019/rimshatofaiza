@@ -7,7 +7,7 @@ export interface BirthdayData {
   pages: QuotePair[];
 }
 
-export type WordColor = 'white' | 'yellow' | 'red' | 'lightblue' | 'neongreen';
+export type WordColor = 'white' | 'yellow' | 'red' | 'lightblue' | 'neongreen'| 'orange'| 'blue' | 'purple' | 'green' | 'pink';
 
 export interface StyledWord {
   text: string;
